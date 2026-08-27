@@ -1,0 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv
+# Local Pi runtime state
+.atl/
+.pi-lens/*
+.pi/*
+.claude/
+# Tarifas reales del usuario (datos comerciales, no versionar)
+*.xlsx
+*.xlsm
+!examples/*.xlsx
+presupuestos/*
+data/*
+originales/
+backups/

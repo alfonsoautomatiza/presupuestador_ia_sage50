@@ -1,0 +1,5 @@
+include data/tarifas.json
+include data/tarifas_simplificadas.xlsx
+include .streamlit/config.toml
+recursive-include data *.json *.xlsx
+recursive-include presupuestos *.pdf
