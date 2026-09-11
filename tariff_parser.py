@@ -15,29 +15,56 @@ import json
 import os
 import shutil
 import sys
-
+    
 import pandas as pd
 
 # ──────────────────────────────────────────────
 # CONFIGURACIÓN
 # ──────────────────────────────────────────────
-def _resolver_app_dir() -> str:
-    """Writable application directory.
+def _resolver_app_dir(frozen: bool, module_dir: str, source_marker: bool) -> str:
+    """Resolve the writable application directory for each deployment mode.
 
-    In a frozen PyInstaller one-file build, __file__ points at the
-    temporary _MEIPASS extraction dir, which is wiped when the process
-    exits. Persist user data next to the executable instead.
+    Frozen applications persist beside the executable. Source checkouts use
+    the repository directory; installed applications use per-user storage.
     """
-    if getattr(sys, "frozen", False):
+    if frozen:
         return os.path.dirname(os.path.abspath(sys.executable))
-    return os.path.dirname(os.path.abspath(__file__))
+    if source_marker:
+        return os.path.abspath(module_dir)
+
+    configured = os.environ.get("TARIFAS_DATA_DIR")
+    if configured:
+        return os.path.abspath(os.path.expanduser(configured))
+
+    try:
+        from platformdirs import user_data_dir
+        return user_data_dir("tarifas-sage50", appauthor=False)
+    except ImportError:
+        if os.name == "nt":
+                base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~/AppData/Local")
+        elif sys.platform == "darwin":
+                base = os.path.expanduser("~/Library/Application Support")
+        else:
+                base = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
+        return os.path.join(base, "tarifas-sage50")
 
 
-APP_DIR = _resolver_app_dir()
-DATA_JSON = os.path.join(APP_DIR, "data", "tarifas.json")
+def _resolver_app_dir_actual() -> str:
+    """Resolve paths using the current runtime environment."""
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    source_marker = os.path.isfile(os.path.join(module_dir, "pyproject.toml"))
+    return _resolver_app_dir(getattr(sys, "frozen", False), module_dir, source_marker)
+
+
+APP_DIR = _resolver_app_dir_actual()
 DATA_DIR = os.path.join(APP_DIR, "data")
+DATA_JSON = os.path.join(DATA_DIR, "tarifas.json")
 ORIGINALES_DIR = os.path.join(APP_DIR, "originales")
 PDF_DIR = os.path.join(APP_DIR, "presupuestos")
+BACKUP_DIR = os.path.join(APP_DIR, "backups")
+OUT_XLSX = os.path.join(DATA_DIR, "tarifas_simplificadas.xlsx")
+OUT_JSON = DATA_JSON
+ESTADO_FILE = os.path.join(DATA_DIR, ".ultimo_hash")
 ULTIMA_TARIFA_FILE = os.path.join(DATA_DIR, ".ultima_tarifa.json")
 HOJA_TARIFA_PROCESOS = "Tarifa Intera Antes Añadir ISV"
 TARIFA_PROCESOS_XLSX = "tarifa_intera_antes_anadir_isv.xlsx"
@@ -49,16 +76,27 @@ def _bootstrap_bundled_data():
     persists across sessions."""
     if not getattr(sys, "frozen", False):
         return
-    bundled = os.path.join(sys._MEIPASS, "data", "tarifas.json")
+    bundled = os.path.join(getattr(sys, "_MEIPASS"), "data", "tarifas.json")
     if os.path.isfile(bundled) and not os.path.isfile(DATA_JSON):
         os.makedirs(DATA_DIR, exist_ok=True)
         shutil.copy2(bundled, DATA_JSON)
 
 
+def _migrar_datos_legacy():
+    """Best-effort migration of data files from the old module directory."""
+    legacy_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    if os.path.abspath(legacy_dir) == os.path.abspath(DATA_DIR): return
+    try: [shutil.copy2(os.path.join(legacy_dir, name), os.path.join(DATA_DIR, name)) for name in ("tarifas.json", "tarifas_simplificadas.xlsx", ".ultima_tarifa.json", ".ultimo_hash") if os.path.isfile(os.path.join(legacy_dir, name)) and not os.path.exists(os.path.join(DATA_DIR, name))]
+    except OSError: pass
+
+
 def init_dirs():
     """Create the application working directories."""
+    os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(PDF_DIR, exist_ok=True)
     os.makedirs(ORIGINALES_DIR, exist_ok=True)
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    _migrar_datos_legacy()
     _bootstrap_bundled_data()
 
 
@@ -210,6 +248,7 @@ def procesar_tarifa(ruta_excel: str, hoja_tarifa: str) -> tuple[int, int, str]:
     if not rows:
         raise ValueError("No se pudieron extraer productos del Excel. ¿Formato correcto?")
 
+    os.makedirs(DATA_DIR, exist_ok=True)
     with open(DATA_JSON, 'w', encoding='utf-8') as f:
         json.dump(rows, f, ensure_ascii=False, indent=2)
     return len(rows), errores, tarifa_procesos

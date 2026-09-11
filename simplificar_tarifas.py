@@ -18,7 +18,7 @@ Ejemplo:
 Autor: ALCA TIC S.L. — Cádiz, España
 """
 
-import pandas as pd
+import pandas as pd  # pyright: ignore[reportMissingImports]
 import json
 import os
 import sys
@@ -29,20 +29,16 @@ import argparse
 import time
 import glob
 
-# ──────────────────────────────────────────────
-# RUTAS
-# ──────────────────────────────────────────────
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(APP_DIR, "data")
-ORIGINALES_DIR = os.path.join(APP_DIR, "originales")
-BACKUP_DIR = os.path.join(APP_DIR, "backups")
-OUT_XLSX = os.path.join(DATA_DIR, "tarifas_simplificadas.xlsx")
-OUT_JSON = os.path.join(DATA_DIR, "tarifas.json")
-ESTADO_FILE = os.path.join(DATA_DIR, ".ultimo_hash")
-
-# Crear directorios si no existen
-for d in [DATA_DIR, ORIGINALES_DIR, BACKUP_DIR]:
-    os.makedirs(d, exist_ok=True)
+from tariff_parser import (
+    APP_DIR,
+    BACKUP_DIR,
+    DATA_DIR,
+    ESTADO_FILE,
+    ORIGINALES_DIR,
+    OUT_JSON,
+    OUT_XLSX,
+    init_dirs,
+)
 
 # Nombre de hoja esperado (puede variar entre versiones)
 HOJAS_VALIDAS = ["Tarifa Intera Antes Añadir ISV", "Tarifa Intera", "Tarifa Interanual", "Tarifas"]
@@ -338,7 +334,8 @@ Ejemplos:
                         help="Forzar reprocesamiento aunque no haya cambios")
 
     args = parser.parse_args()
-
+    init_dirs()
+    
     print("=" * 55)
     print("  LIMPIADOR DE TARIFAS SAGE 50")
     print("  ALCA TIC S.L. — Cádiz, España")
