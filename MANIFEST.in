@@ -1,5 +1,7 @@
-include data/tarifas.json
-include data/tarifas_simplificadas.xlsx
-include .streamlit/config.toml
-recursive-include data *.json *.xlsx
-recursive-include presupuestos *.pdf
+# Source-only distribution: never bundle tariff, client, or business data.
+prune data
+prune presupuestos
+prune originales
+prune backups
+prune examples
+global-exclude *.xlsx *.xlsm *.xls
