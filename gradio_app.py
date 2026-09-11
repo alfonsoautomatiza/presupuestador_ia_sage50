@@ -253,9 +253,10 @@ BUDGET_DELETE_JS = """
         const button = event.target.closest(".budget-delete");
         if (!button) return;
         const textbox = document.querySelector("#budget-delete-index input, #budget-delete-index textarea");
-        const trigger = document.querySelector("#budget-delete-trigger button");
+        const trigger = document.querySelector("#budget-delete-trigger");
         if (!textbox || !trigger) return;
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+        const proto = textbox.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+        const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
         if (setter) setter.call(textbox, button.dataset.lineIndex);
         textbox.dispatchEvent(new Event("input", {bubbles: true}));
         textbox.dispatchEvent(new Event("change", {bubbles: true}));
@@ -314,9 +315,9 @@ def build_app():
                             flavor_filter = gr.CheckboxGroup(label="Sabor", choices=sorted({p["sabor"] for p in products if p["sabor"]}))
                         with gr.Row():
                             platform_filter = gr.CheckboxGroup(label="Plataforma", choices=sorted({p["plataforma"] for p in products if p["plataforma"]}))
-                        catalog = gr.Dataframe(value=_catalog_dataframe(products), interactive=False, wrap=True)
                         add_filtered = gr.Button("➕ Añadir todos los filtrados al presupuesto", variant="secondary")
                         catalog_status = gr.Markdown()
+                        catalog = gr.Dataframe(value=_catalog_dataframe(products), interactive=False, wrap=True)
                     with gr.Tab("📝 Presupuesto"):
                         gr.Markdown("### Añadir al presupuesto")
                         product = gr.Dropdown(label="Producto filtrado", choices=[f"{p['descripcion']} [{p['codigo']}]" for p in products])
