@@ -64,6 +64,6 @@ def generar_pdf(datos_cliente, lineas, totales, notas="", agrupacion=None):
     elements += [table, Spacer(1, 8 * mm)]
     if notas:
         elements += [Paragraph("OBSERVACIONES", subtitulo), Paragraph(_xml_text(notas), normal), Spacer(1, 4 * mm)]
-    elements += [HRFlowable(width="100%", thickness=.5, color=colors.grey, spaceAfter=2 * mm), Paragraph(f"Generado el {hoy} — ALCA TIC S.L. — Cádiz, España", small)]
+    elements += [HRFlowable(width="100%", thickness=.5, color=colors.grey, spaceAfter=2 * mm), Paragraph(f"Generado el {hoy} — alfonsoautomatiza.com — Cádiz, España", small)]
     doc.build(elements)
     return buf.getvalue(), num

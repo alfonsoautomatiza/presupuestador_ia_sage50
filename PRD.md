@@ -11,10 +11,10 @@ La lista oficial de precios de Sage debe obtenerse por cada usuario o socio medi
 | **Producto** | Presupuestador Sage 50 (`psage`) |
 | **Versión documentada** | 0.3.0 |
 | **Estado** | Implementado (documento formaliza el producto existente) |
-| **Autor** | ALCA TIC S.L. — Cádiz, España |
+| **Autor** | alfonsoautomatiza.com — Cádiz, España |
 | **Licencia** | MIT |
 
-> **Aviso de marca:** proyecto independiente de ALCA TIC S.L., sin afiliación ni respaldo de Sage. “Sage 50” es marca de Sage Group plc.
+> **Aviso de marca:** proyecto independiente de alfonsoautomatiza.com, sin afiliación ni respaldo de Sage. “Sage 50” es marca de Sage Group plc.
 
 ---
 
@@ -44,7 +44,7 @@ Cada presupuesto cuesta minutos de copiado/pegado y cada error de precio es un p
 
 ## 4. Usuarios objetivo
 
-- **Comercial / administrativo de ALCA TIC** (usuario principal): genera presupuestos con una tarifa obtenida legítimamente.
+- **Comercial / administrativo de Alfonso Automatiza** (usuario principal): genera presupuestos con una tarifa obtenida legítimamente.
 - **Responsable de tarifas** (secundario): actualiza localmente la tarifa y usa la app o el CLI de transformación.
 
 ## 5. Alcance

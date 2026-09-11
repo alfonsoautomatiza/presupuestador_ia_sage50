@@ -25,9 +25,13 @@ backups/
 presupuestos/
 examples/
 # Generated and exported JSON data
-**/data/**/*.json
-**/originales/**/*.json
+data/*
+
 **/backups/**/*.json
 **/presupuestos/**/*.json
 **/*tarif*.json
 **/*cliente*.json
+prd.md
+
+# Impeccable design tooling (local QA artifacts)
+.impeccable/

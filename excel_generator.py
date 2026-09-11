@@ -122,7 +122,7 @@ def generar_excel(datos_cliente, lineas, totales, notas="", agrupacion=None):
         ws[f"A{row}"] = notas
     row += 2
     ws.merge_cells(f"A{row}:H{row}")
-    ws[f"A{row}"] = f"Generado el {hoy} — ALCA TIC S.L. — Cádiz, España"
+    ws[f"A{row}"] = f"Generado el {hoy} — alfonsoautomatiza.com — Cádiz, España"
     ws[f"A{row}"].font = Font(name="Calibri", size=8, color="999999")
     ws.auto_filter.ref = f"A{header_row}:H{data_end}"
     buf = io.BytesIO()

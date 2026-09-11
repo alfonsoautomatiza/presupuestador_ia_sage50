@@ -4,7 +4,7 @@
 
 El proyecto se publica para facilitar la transparencia y la colaboración en [alfonsoautomatiza.com/colaboramos](https://alfonsoautomatiza.com/colaboramos).
 
-> **Independencia:** psage es un proyecto independiente de ALCA TIC S.L. No está afiliado, patrocinado ni respaldado oficialmente por Sage. “Sage 50” es una marca de Sage Group plc.
+> **Independencia:** psage es un proyecto independiente de alfonsoautomatiza.com. No está afiliado, patrocinado ni respaldado oficialmente por Sage. “Sage 50” es una marca de Sage Group plc.
 
 ## Autor y contacto
 

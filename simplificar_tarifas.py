@@ -15,7 +15,7 @@ Ejemplo:
     3. Ejecute: python simplificar_tarifas.py
     4. Los datos actualizados estarán en data/tarifas.json
 
-Autor: ALCA TIC S.L. — Cádiz, España
+Autor: alfonsoautomatiza.com — Cádiz, España
 """
 
 import pandas as pd  # pyright: ignore[reportMissingImports]
@@ -338,7 +338,7 @@ Ejemplos:
     
     print("=" * 55)
     print("  LIMPIADOR DE TARIFAS SAGE 50")
-    print("  ALCA TIC S.L. — Cádiz, España")
+    print("  alfonsoautomatiza.com — Cádiz, España")
     print("=" * 55)
     print()
 

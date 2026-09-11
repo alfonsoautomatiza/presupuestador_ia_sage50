@@ -7,7 +7,7 @@ of the product JSON. Extracted from presupuestador.py.
 Directory creation is deferred to init_dirs(), called by the UI, so
 importing this module has no side effects.
 
-Autor: ALCA TIC S.L.
+Autor: alfonsoautomatiza.com
 """
 
 import datetime
