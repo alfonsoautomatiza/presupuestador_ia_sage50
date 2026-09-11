@@ -23,7 +23,9 @@ data/
 originales/
 backups/
 presupuestos/
-examples/
+examples/*
+# Exception: the fictitious demo tariff is the public example
+!examples/tarifa_demo_ficticia.xlsx
 # Generated and exported JSON data
 data/*
 
