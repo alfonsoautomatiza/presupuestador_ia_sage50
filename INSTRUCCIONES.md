@@ -4,9 +4,12 @@
 
 ```
 pytarifas_sage50/
-├── presupuestador.py          ← App Streamlit principal
+├── presupuestador.py          ← Presentación Gradio (presupuestador.py mantiene compatibilidad)
 ├── simplificar_tarifas.py     ← Script de transformación del Excel original
-├── cli.py                     ← Entry point CLI (detección de puerto dinámico)
+├── cli.py                     ← Entry point único (puerto, browser y ventana nativa)
+├── psage.spec                 ← Configuración del ejecutable PyInstaller
+├── pydobj.toml                ← Configuración de wertybuild
+├── c/product.json             ← Fuente de verdad de versión y metadatos
 ├── pyproject.toml             ← Metadata del paquete, dependencias, entry point
 ├── requirements.txt           ← Dependencias Python (desarrollo)
 ├── INSTRUCCIONES.md           ← Este archivo
@@ -18,6 +21,8 @@ pytarifas_sage50/
 ├── backups/                   ← Backups automáticos
 └── presupuestos/              ← PDFs y Excel generados
 ```
+
+En desarrollo estas carpetas viven en el repositorio. El `.exe` guarda sus datos junto al ejecutable; las instalaciones con `uv` o `pipx` usan una carpeta de datos por usuario. Se puede cambiar con `TARIFAS_DATA_DIR` y se migran automáticamente los datos de instalaciones anteriores.
 
 ## Qué se ha simplificado
 
@@ -50,34 +55,49 @@ El Excel original tiene **2 hojas y 42 columnas** con mucha redundancia. Se redu
 # Si el path tiene #, usar symlink:
 mkdir -p /tmp/pytarifas
 ln -sfn "/ruta/a/pytarifas_sage50" /tmp/pytarifas/pytarifas_sage50
-uv tool install --force "tarifas-sage50 @ file:///tmp/pytarifas/pytarifas_sage50"
+uv tool install --force "psage @ file:///tmp/pytarifas/pytarifas_sage50"
 
 # Ejecutar:
-tarifas-sage50              # puerto 8599 o primer libre
-tarifas-sage50 --port 9000  # puerto fijo
-tarifas-sage50 --no-browser # sin abrir navegador
+psage              # puerto 8599 o primer libre
+psage --port 9000  # puerto fijo
+psage --no-browser # sin abrir navegador
+psage --window     # ventana nativa con pywebview
 ```
+
+El ejecutable congelado usa `psage` como entrada y abre la ventana nativa por defecto; `--window` fuerza ese modo y `--no-browser` evita el navegador.
+
+### Generar el ejecutable
+
+Los builds del `.exe` se ejecutan únicamente en Windows. Requieren `uv` y `pydobj` disponibles en `PATH`:
+
+```powershell
+uv sync
+wertybuild exe
+# Salida: dist/psage/psage.exe
+```
+
+Para refrescar incrementalmente las fuentes empaquetadas, usa `wertybuild pyd`. La versión y los metadatos del ejecutable tienen como fuente de verdad `c/product.json`.
 
 ### Instalación con pipx
 
 ```bash
 cd /ruta/a/pytarifas_sage50
 pipx install --force .
-tarifas-sage50
+psage
 ```
 
 ### Modo desarrollo
 
 ```bash
 pip install -r requirements.txt
-streamlit run presupuestador.py
+psage
 ```
 
 ### Actualizar a nueva versión
 
 ```bash
 # Repite el comando de instalación con --force
-uv tool install --force "tarifas-sage50 @ file:///tmp/pytarifas/pytarifas_sage50"
+uv tool install --force "psage @ file:///tmp/pytarifas/pytarifas_sage50"
 ```
 
 ## Uso de la aplicación
@@ -92,18 +112,25 @@ uv tool install --force "tarifas-sage50 @ file:///tmp/pytarifas/pytarifas_sage50
 
 ### Datos del cliente
 
-2. **Sidebar izquierdo**: rellene los datos del cliente (empresa, CIF, contacto, email, condiciones de pago, IVA).
+1. **Sidebar izquierdo**: rellene los datos del cliente (empresa, CIF, contacto, email, condiciones de pago, IVA).
 
 ### Filtros y selección de productos
 
-3. **Filtros**: use los filtros de Módulo, Sabor, Plataforma, Plan, Periodicidad o búsqueda por texto para localizar productos.
-4. **Añadir líneas**: seleccione un producto, elija plan (Standard/Extra/Complete/Sin Nivel), periodicidad (Mensual/Anual/Trienal) y cantidad. Pulse "Añadir al presupuesto".
+1. **Filtros**: use los filtros de Módulo, Sabor, Plataforma, Plan, Periodicidad o búsqueda por texto para localizar productos.
+2. **Añadir líneas**: seleccione un producto, elija plan (Standard/Extra/Complete/Sin Nivel), periodicidad (Mensual/Anual/Trienal) y cantidad. Pulse "Añadir al presupuesto".
 
 ### Exportación
 
-5. **Revisar**: el resumen muestra todas las líneas con subtotal, IVA y total.
-6. **Generar PDF**: pulse 📄 para crear un PDF profesional. Se guarda en `presupuestos/` y se puede descargar.
-7. **Generar Excel**: pulse 📊 para crear un `.xlsx` editable con los mismos datos, estilos y totales.
+1. **Revisar**: el resumen muestra todas las líneas con subtotal, IVA y total.
+2. **Generar PDF**: pulse 📄 para crear un PDF profesional. Se guarda en `presupuestos/` y se puede descargar.
+    3. **Generar Excel**: pulse 📊 para crear un `.xlsx` editable con los mismos datos, estilos y totales. Las exportaciones incluyen el código Sage y una fila única «TOTAL + IVA».
+    4. **Generar JSON para IA**: pulse 🤖 para crear un JSON UTF-8, estricto y versionado (`tarifas-sage50/oferta/v1`) con tarifa, cliente, líneas completas, agrupaciones y totales. Conserva los valores numéricos para ingestión y cálculos automáticos; no incluye la ruta absoluta de la tarifa.
+
+       El JSON contiene CIF y email. Revise la política de privacidad antes de enviarlo a una IA externa.
+
+### Plantillas y agrupación
+
+Las plantillas se guardan en `data/plantillas.json` en desarrollo; en modo `.exe` junto al ejecutable y en instalaciones con `uv` o `pipx` en la carpeta de datos de usuario configurada para el despliegue. Solo contienen líneas y observaciones. En el resumen se puede agrupar por plan o periodicidad; cada grupo muestra su subtotal y el criterio se aplica también al PDF y Excel.
 
 ## Lógica de precios
 
