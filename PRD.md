@@ -1,29 +1,35 @@
 # PRD — Presupuestador Sage 50
 
+## Norma rígida de publicación pública
+
+**MUST:** el repositorio público contiene únicamente código fuente, tests y documentación. Nunca se deben commitear ni distribuir datos JSON de tarifas, clientes o negocios, ni archivos `.xlsx`, `.xlsm` o `.xls`, sean reales o ficticios. También están prohibidos backups, exportaciones, salidas generadas, ejemplos, fixtures con datos, credenciales y cualquier información comercial. Los tests deben usar datos en memoria o fixtures temporales fuera de rutas trackeadas. **Cualquier violación bloquea la publicación.**
+
+La lista oficial de precios de Sage debe obtenerse por cada usuario o socio mediante un acceso legítimo y proporcionarse localmente; este proyecto no la distribuye.
+
 | | |
 | --- | --- |
-| **Producto** | Presupuestador Sage 50 (`tarifas-sage50`) |
+| **Producto** | Presupuestador Sage 50 (`psage`) |
 | **Versión documentada** | 0.3.0 |
 | **Estado** | Implementado (documento formaliza el producto existente) |
 | **Autor** | ALCA TIC S.L. — Cádiz, España |
 | **Licencia** | MIT |
 
-> **Aviso de marca:** proyecto independiente de ALCA TIC S.L., sin afiliación ni respaldo de Sage. "Sage 50" es marca de Sage Group plc. El repositorio no distribuye tarifas reales; cada usuario aporta la suya por medios legítimos.
+> **Aviso de marca:** proyecto independiente de ALCA TIC S.L., sin afiliación ni respaldo de Sage. “Sage 50” es marca de Sage Group plc.
 
 ---
 
 ## 1. Visión
 
-Que cualquier miembro del equipo genere en segundos un presupuesto presentable (PDF o Excel) a partir de la tarifa de precios de Sage 50, sin buscar precios a mano ni calcular descuentos en una hoja de cálculo.
+Que cualquier miembro del equipo genere en segundos un presupuesto presentable a partir de una lista de precios de Sage 50 obtenida legítimamente, sin buscar precios a mano ni calcular descuentos en una hoja de cálculo.
 
 ## 2. Problema
 
 Armar un presupuesto desde una lista de precios con múltiples productos, planes y periodicidades es trabajo manual repetitivo y propenso a error:
 
-1. Localizar el producto correcto entre decenas de filas y 42 columnas del Excel original.
-2. Aplicar el plan y la periodicidad correctos (el precio vive en una celda cruzada).
+1. Localizar el producto correcto entre decenas de filas y columnas del Excel original.
+2. Aplicar el plan y la periodicidad correctos.
 3. Calcular descuentos en cascada (partner, tech BP, PAM).
-4. Dar formato a un PDF o Excel presentable para el cliente.
+4. Dar formato a un presupuesto presentable para el cliente.
 
 Cada presupuesto cuesta minutos de copiado/pegado y cada error de precio es un problema comercial.
 
@@ -33,30 +39,31 @@ Cada presupuesto cuesta minutos de copiado/pegado y cada error de precio es un p
 | --- | --- |
 | Reducir el tiempo de generación de un presupuesto a segundos | Un presupuesto de ~10 líneas se arma y exporta en < 2 minutos |
 | Eliminar errores de precio y descuento | La lógica de precios está centralizada y cubierta por tests unitarios |
-| Cero fricción de puesta en marcha | Instalable con `uv tool`/`pipx` o ejecutable `.exe` sin Python |
-| Cero mantenimiento del formato de tarifa | El Excel original de Sage se transforma una vez, con backup y detección de cambios |
+| Cero fricción de puesta en marcha | Instalable desde el código fuente con `uv tool`/`pipx` |
+| Cero mantenimiento del formato de tarifa | El Excel original de Sage se transforma localmente cuando corresponde |
 
 ## 4. Usuarios objetivo
 
-- **Comercial / administrativo de ALCA TIC** (usuario principal): genera presupuestos para clientes. No es técnico; usa la app con datos ya cargados o sube un Excel nuevo.
-- **Responsable de tarifas** (secundario): actualiza la tarifa periódicamente; usa la app o el CLI de transformación.
+- **Comercial / administrativo de ALCA TIC** (usuario principal): genera presupuestos con una tarifa obtenida legítimamente.
+- **Responsable de tarifas** (secundario): actualiza localmente la tarifa y usa la app o el CLI de transformación.
 
 ## 5. Alcance
 
 ### Dentro del alcance
 
-- Transformación del Excel original de Sage (42 columnas, 2 hojas) a un JSON simplificado (17 campos).
-- Aplicación web local (Gradio) para armar presupuestos: filtros, líneas, totales.
-- Resolución de precios por plan + periodicidad con fallbacks, y descuentos en cascada.
-- Exportación a PDF (presentable) y Excel (editable).
-- Distribución: paquete instalable (`uv tool`/`pipx`) y ejecutable standalone de Windows (PyInstaller), con ventana nativa opcional (pywebview).
+- Transformación local del Excel original de Sage a un formato simplificado.
+- Aplicación web local (Gradio) para armar presupuestos: filtros, líneas y totales.
+- Resolución de precios por plan + periodicidad con fallbacks y descuentos en cascada.
+- Exportación local a PDF y Excel.
+- Distribución pública únicamente como instalación desde el código fuente mediante `uv tool`/`pipx`.
 
 ### Fuera del alcance
 
-- Integración con Sage 50 o cualquier API externa (la tarifa se importa manualmente).
+- Integración con Sage 50 o cualquier API externa.
+- Distribución o inclusión de tarifas, clientes, negocios, ejemplos o fixtures con datos.
 - Gestión de clientes, histórico de presupuestos o CRM.
 - Multiusuario / servidor compartido: es una herramienta de escritorio local.
-- Distribución de tarifas reales (datos comerciales del usuario, no versionados).
+- Ejecutables standalone, PyInstaller, wertybuild o cualquier sistema privado de compilación.
 
 ## 6. Requisitos funcionales
 
@@ -65,99 +72,94 @@ Prioridad MoSCoW. Todos los RF listados están implementados en v0.3.0 salvo que
 ### RF-1 — Carga y transformación de tarifas
 
 | ID | Requisito | Prioridad |
-| ---- | ----------- | ----------- |
-| RF-1.1 | Acepta el Excel original de Sage (2 hojas, 42 columnas) y lo reduce a 17 campos útiles en `data/tarifas.json` + un Excel limpio de consulta. | Must |
-| RF-1.2 | Al procesar una tarifa nueva, guarda backup automático del original y detecta cambios por hash MD5 (no reprocesa sin necesidad). | Must |
-| RF-1.3 | En la app: desplegable con los Excel de `originales/` o raíz, y uploader para subir uno nuevo; la última tarifa usada se recuerda entre sesiones (`.ultima_tarifa.json`). | Must |
+| ---- | ----------- | --------- |
+| RF-1.1 | Acepta localmente el Excel original de Sage y lo transforma a un formato simplificado para uso local. | Must |
+| RF-1.2 | Al procesar una tarifa nueva, puede guardar backup local y detectar cambios; estos archivos nunca se versionan. | Must |
+| RF-1.3 | La app permite seleccionar o subir localmente una tarifa legítimamente obtenida y recordar la última utilizada sin publicarla. | Must |
 | RF-1.4 | CLI de transformación: `simplificar_tarifas.py [archivo]` con modo vigilancia `--vigilar` y forzado `--forzar`. | Should |
-| RF-1.5 | Incluye tarifa de ejemplo ficticia (`examples/`) para probar sin datos reales. | Should |
+| RF-1.5 | No incluye tarifas de ejemplo ni datos ficticios en el repositorio público; las pruebas usan datos en memoria o temporales. | Must |
 
 ### RF-2 — Armado del presupuesto (UI Gradio)
 
 | ID | Requisito | Prioridad |
-| ---- | ----------- | ----------- |
+| ---- | ----------- | --------- |
 | RF-2.1 | Datos del cliente en el sidebar: empresa, CIF, contacto, email, condiciones de pago y % de IVA. | Must |
 | RF-2.2 | Filtros por Módulo, Sabor, Plataforma, Plan, Periodicidad y búsqueda por texto libre. | Must |
-| RF-2.3 | Añadir líneas: producto + plan (Standard/Extra/Complete/Sin Nivel) + periodicidad (Mensual/Anual/Bianual/Trienal/Puntual) + cantidad. | Must |
-| RF-2.4 | Resumen del presupuesto: líneas, subtotal, IVA y total, editables (quitar líneas). | Must |
-| RF-2.5 | Permite guardar, cargar y eliminar plantillas con nombre que contienen líneas y observaciones, nunca IVA ni datos del cliente. | Must |
-| RF-2.6 | Permite agrupar el presupuesto por plan o periodicidad y muestra subtotales por grupo en la UI y exportaciones. | Must |
+| RF-2.3 | Añadir líneas: producto + plan + periodicidad + cantidad. | Must |
+| RF-2.4 | Resumen del presupuesto: líneas, subtotal, IVA y total, editables. | Must |
+| RF-2.5 | Permite guardar, cargar y eliminar plantillas locales sin publicarlas. | Must |
+| RF-2.6 | Permite agrupar el presupuesto por plan o periodicidad y muestra subtotales. | Must |
 
 ### RF-3 — Lógica de precios y descuentos (sin dependencias de UI)
 
 | ID | Requisito | Prioridad |
-| ---- | ----------- | ----------- |
-| RF-3.1 | Resolución de precio unitario en orden de prioridad: (1) plan + periodicidad exactos, (2) Sin Nivel de Servicio + periodicidad, (3) SSRS para servicios puntuales; 0 si no hay coincidencia. | Must |
+| ---- | -------- | --------- |
+| RF-3.1 | Resolución de precio unitario por plan + periodicidad, con los fallbacks definidos por el modelo. | Must |
 | RF-3.2 | Descuentos en cascada: `Neto = Precio × (1 − dto_partner) × (1 − dto_tech_bp) × (1 − dto_pam)`, redondeado a 2 decimales. | Must |
-| RF-3.3 | Filtro de periodicidad: un producto pasa si declara la periodicidad filtrada; "Puntual" pasa siempre cualquier filtro. | Must |
-| RF-3.4 | Precio de referencia: mínimo del período; para puntuales usa SSRS; 0 si no hay candidatos. | Should |
-| RF-3.5 | Toda esta lógica vive en módulos puros (`models.py`, `tariff_parser.py`) testeables sin depender de Gradio. | Must |
+| RF-3.3 | Filtro de periodicidad según la periodicidad declarada por el producto. | Must |
+| RF-3.4 | Precio de referencia: mínimo del período; 0 si no hay candidatos. | Should |
+| RF-3.5 | La lógica vive en módulos puros testeables sin depender de Gradio. | Must |
 
 ### RF-4 — Exportación
 
 | ID | Requisito | Prioridad |
-| ---- | ----------- | ----------- |
-| RF-4.1 | PDF profesional (reportlab) con datos del cliente, líneas, código Sage, subtotal y una fila única `TOTAL + IVA`; se guarda en `presupuestos/` y se puede descargar. | Must |
-| RF-4.2 | Excel editable (openpyxl) con los mismos datos, estilos, código Sage y fila única `TOTAL + IVA`. | Must |
-| RF-4.3 | JSON estricto y versionado (`tarifas-sage50/oferta/v1`) con datos completos de tarifa, cliente, líneas, agrupaciones y totales, disponible para descarga y cálculos de IA. | Must |
+| ---- | -------- | --------- |
+| RF-4.1 | PDF profesional con datos del cliente, líneas, subtotal y total; se guarda localmente. | Must |
+| RF-4.2 | Excel editable con los mismos datos y estilos; se guarda localmente y nunca se versiona. | Must |
+| RF-4.3 | JSON versionado para exportación local; puede contener datos de cliente y debe tratarse como información sensible. | Must |
 
 ### RF-5 — Ejecución y distribución
 
 | ID | Requisito | Prioridad |
-| ---- | ----------- | ----------- |
-| RF-5.1 | CLI `psage`: detecta puerto (8599 por defecto; si está ocupado, primer libre en 8600–9000), opciones `--port` y `--no-browser`. | Must |
-| RF-5.2 | Comando único `psage`: instalado con uv/pipx abre el navegador por defecto vía subprocess; `--window` usa una ventana nativa con pywebview; el ejecutable congelado usa `psage` como entrada y conserva el bootstrap programático con datos en `sys._MEIPASS`. | Must |
-| RF-5.3 | `.exe` standalone de Windows (~80–120 MB) generado con `wertybuild` y `psage.spec`; sin Python instalado en el equipo destino. Por defecto abre ventana nativa. | Must |
-| RF-5.4 | Instalación como tool: `uv tool install` o `pipx install .` (Python ≥ 3.11). | Should |
+| ---- | -------- | --------- |
+| RF-5.1 | CLI `psage`: detecta puerto y admite `--port` y `--no-browser`. | Must |
+| RF-5.2 | Comando `psage`, instalado con `uv tool` o `pipx`, abre la aplicación Gradio local. | Must |
+| RF-5.3 | Instalación como tool: `uv tool install` o `pipx install .` (Python ≥ 3.11). | Should |
 
 ## 7. Requisitos no funcionales
 
 | ID | Requisito |
-| ---- | ----------- |
-| RNF-1 | **Usabilidad:** un usuario no técnico arma un presupuesto sin documentación; la UI es la de Gradio con flujos lineales (tarifa → cliente → filtros → líneas → exportar). |
-| RNF-2 | **Rendimiento:** la tarifa se carga una vez a JSON; filtrar y añadir líneas es interactivo (< 1 s con tarifas de miles de filas). |
-| RNF-3 | **Portabilidad:** funciona en Windows (`.exe`, ventana nativa), Linux/macOS vía tool install; detección de rutas Windows/WSL normalizada. |
-| RNF-4 | **Mantenibilidad:** lógica de negocio pura y testeada (pytest) separada de la UI; transformación de tarifas desacoplada de la app. |
-| RNF-5 | **Seguridad de datos:** las tarifas reales, presupuestos y backups viven en carpetas no versionadas (`data/`, `originales/`, `backups/`, `presupuestos/`); en modo instalado se guardan en una carpeta local por usuario y sobreviven reinstalaciones; todo es local, sin red más allá de `localhost`. El JSON de IA incluye CIF y email: debe revisarse la política de privacidad antes de compartirlo externamente. |
-| RNF-6 | **Legal:** no distribuye datos comerciales de Sage ni presupuestos de terceros; datos de ejemplo ficticios. |
+| --- | --- |
+| RNF-1 | **Usabilidad:** flujo lineal tarifa → cliente → filtros → líneas → exportar. |
+| RNF-2 | **Rendimiento:** la tarifa se carga una vez a un formato local; filtrar y añadir líneas es interactivo. |
+| RNF-3 | **Portabilidad:** funciona en Windows, Linux y macOS vía instalación como tool. |
+| RNF-4 | **Mantenibilidad:** lógica pura y testeada separada de la UI. |
+| RNF-5 | **Seguridad de datos:** tarifas, presupuestos y backups viven localmente en rutas no versionadas; todo es local salvo `localhost`. |
+| RNF-6 | **Legal:** cada usuario debe tener acceso legítimo a la tarifa; el repositorio no distribuye datos de Sage ni de terceros. |
 
 ## 8. Restricciones y dependencias
 
-- **Formato de entrada:** el parser asume el layout actual del Excel de Sage (42 columnas). Un cambio de formato de Sage requiere actualizar `simplificar_tarifas.py`.
-- **Stack:** Python ≥ 3.11, Gradio, pandas, openpyxl, reportlab, pywebview.
-- **Empaquetado:** el `.exe` solo se genera en Windows (PyInstaller); primera ejecución lenta por descompresión.
-- **Instaladores:** `uv tool`/`pipx` fallan con rutas que contienen `#` (documentado, workaround con symlink).
+- **Formato de entrada:** el parser asume el layout actual del Excel de Sage; cambios requieren actualizar `simplificar_tarifas.py`.
+- **Stack:** Python ≥ 3.11, Gradio, pandas, openpyxl y reportlab.
+- **Instalación:** `uv tool`/`pipx` desde el código fuente.
 
 ## 9. Riesgos
 
 | Riesgo | Impacto | Mitigación |
-| -------- | --------- | ------------ |
-| Sage cambia el layout del Excel de tarifas | Alto — el parser deja de producir JSON válido | Backup automático del original; transformación aislada en un solo script con detección de cambios |
-| Error de precio ante el cliente | Alto — impacto comercial | Lógica centralizada + tests unitarios de precios, descuentos y filtros |
-| Puerto 8599 ocupado en máquinas compartidas | Bajo — la app no arranca | Búsqueda automática de puerto libre (8600–9000) |
-| Tamaño del `.exe` (80–120 MB) | Bajo — percepción de lentitud | Documentado; primera ejecución más lenta es esperada |
+| --- | --- | --- |
+| Sage cambia el layout del Excel de tarifas | Alto | Transformación aislada y tests. |
+| Error de precio ante el cliente | Alto | Lógica centralizada y tests unitarios. |
+| Puerto 8599 ocupado | Bajo | Búsqueda automática de puerto libre. |
+| Publicación accidental de datos | Crítico | Norma rígida de publicación y reglas de `.gitignore`; cualquier violación bloquea la publicación. |
 
 ## 10. Backlog propuesto (no comprometido)
 
-Ideas candidatas para futuras versiones; ninguna está en el alcance actual:
-
-- Numeración y registro de presupuestos (histórico local con búsqueda).
-- Plantillas de descuento por cliente (evitar re-teclear dto_partner/dto_tech_bp/dto_pam).
-- Actualización del parser por configuración (mapeo de columnas en YAML) para absorber cambios de formato de Sage sin tocar código.
-- CI con pytest + build del `.exe` (hoy el build es manual en Windows).
-- Vista previa del PDF dentro de la app antes de descargar.
+- Numeración y registro local de presupuestos.
+- Plantillas de descuento por cliente.
+- Actualización del parser por configuración.
+- CI con pytest.
+- Vista previa del PDF dentro de la app.
 
 ## 11. Glosario
 
 | Término | Definición |
-| --------- | ----------- |
-| **Tarifa** | Excel de precios oficial de Sage 50 (productos × planes × periodicidades) |
-| **Plan** | Nivel de servicio: Standard, Extra, Complete, Sin Nivel |
-| **Periodicidad** | Mensual, Anual, Bianual, Trienal o Puntual (servicio único, SSRS) |
-| **SSRS** | Servicio puntual (sin recurrencia) |
-| **dto_partner / dto_tech_bp / dto_pam** | Descuentos aplicados en cascada sobre el precio de tarifa |
-| **Tarifa simplificada** | JSON de 17 campos resultante de transformar el Excel original de 42 columnas |
+| --- | --- |
+| **Tarifa** | Excel oficial de precios de Sage 50 obtenido legítimamente y usado localmente. |
+| **Plan** | Nivel de servicio. |
+| **Periodicidad** | Mensual, Anual, Bianual, Trienal o Puntual. |
+| **SSRS** | Servicio puntual (sin recurrencia). |
+| **Tarifa simplificada** | Formato local resultante de transformar el Excel original. |
 
 ---
 
-*Documento generado a partir del estado real del repositorio (v0.3.0, commit `8e2acad`). Detalles técnicos de implementación en [`INSTRUCCIONES.md`](INSTRUCCIONES.md); uso diario en [`README.md`](README.md).*
+*Documento formalizado a partir del producto existente. Detalles técnicos y uso en [`README.md`](README.md).*

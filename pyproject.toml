@@ -29,6 +29,3 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 py-modules = ["presupuestador", "gradio_app", "simplificar_tarifas", "cli", "models", "tariff_parser", "pdf_generator", "excel_generator", "json_generator", "templates"]
 include-package-data = true
-
-[tool.setuptools.package-data]
-"*" = ["data/*.json", "data/*.xlsx"]

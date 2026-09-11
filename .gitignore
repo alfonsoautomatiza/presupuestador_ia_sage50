@@ -15,11 +15,19 @@ wheels/
 .pi-lens/*
 .pi/*
 .claude/
-# Tarifas reales del usuario (datos comerciales, no versionar)
+# Public-source data policy: never track tariff, client, business, or generated artifacts
 *.xlsx
 *.xlsm
-!examples/*.xlsx
-presupuestos/*
-data/*
+*.xls
+data/
 originales/
 backups/
+presupuestos/
+examples/
+# Generated and exported JSON data
+**/data/**/*.json
+**/originales/**/*.json
+**/backups/**/*.json
+**/presupuestos/**/*.json
+**/*tarif*.json
+**/*cliente*.json
