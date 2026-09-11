@@ -8,6 +8,7 @@ filtrar_productos = _app.filtrar_productos
 normalize_lineas = _app.normalize_lineas
 render_budget_html = _app.render_budget_html
 delete_line = _app.delete_line
+select_all_filter_values = _app.select_all_filter_values
 
 
 def product():
@@ -16,6 +17,27 @@ def product():
         "periodicidades": "Anual", "modulo": "", "sabor": "", "plataforma": "",
         "dto_partner": 0.1, "dto_tech_bp": 0, "dto_pam": 0,
         "_precios": {"standard_anual": 100},
+    }
+
+
+def test_select_all_filter_values_covers_every_dimension():
+    products = [
+        {
+            "codigo": "A1", "descripcion": "Uno", "planes": "Complete, Extra",
+            "periodicidades": "Anual, Mensual", "modulo": "Contabilidad",
+            "sabor": "Essential", "plataforma": "Desktop",
+        },
+        {
+            "codigo": "B2", "descripcion": "Dos", "planes": "Standard",
+            "periodicidades": "Bianual", "modulo": "Nóminas",
+            "sabor": "", "plataforma": "Web",
+        },
+    ]
+    assert select_all_filter_values(products) == {
+        "plans": ["Complete", "Extra", "Standard"],
+        "periodicidades": ["Anual", "Bianual", "Mensual"],
+        "sabores": ["Essential"],
+        "plataformas": ["Desktop", "Web"],
     }
 
 

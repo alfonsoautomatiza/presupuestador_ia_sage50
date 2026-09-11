@@ -84,6 +84,16 @@ def filtrar_productos(productos: list[dict], planes=None, periodicidades=None, m
     return result
 
 
+def select_all_filter_values(products: list[dict]) -> dict:
+    """Collect every catalog filter option for the bulk-select button."""
+    return {
+        "plans": sorted({x for p in products for x in csv_a_set(p["planes"])}),
+        "periodicidades": sorted({x for p in products for x in csv_a_set(p["periodicidades"])}),
+        "sabores": sorted({p["sabor"] for p in products if p["sabor"]}),
+        "plataformas": sorted({p["plataforma"] for p in products if p["plataforma"]}),
+    }
+
+
 def normalize_lineas(lineas: list[dict] | None) -> list[dict]:
     """Return exporter/display-safe copies without changing valid values."""
     normalized = []
@@ -293,7 +303,9 @@ def build_app():
                         template_status = gr.Markdown()
                         notes = gr.Textbox(label="Observaciones", lines=5)
                     with gr.Tab("🔍 Catálogo"):
-                        search = gr.Textbox(label="Buscar por nombre o código")
+                        with gr.Row():
+                            search = gr.Textbox(label="Buscar por nombre o código", scale=4)
+                            mark_all = gr.Button("📌 Todo", variant="secondary", scale=1)
                         with gr.Row():
                             plan_filter = gr.CheckboxGroup(label="Plan / Nivel", choices=sorted({x for p in products for x in csv_a_set(p["planes"])}))
                             period_filter = gr.CheckboxGroup(label="Periodicidad", choices=sorted({x for p in products for x in csv_a_set(p["periodicidades"])}))
@@ -343,6 +355,17 @@ def build_app():
         catalog_filters = (search, plan_filter, period_filter, module_filter, flavor_filter, platform_filter)
         for component in catalog_filters:
             component.change(update_catalog, [search, plan_filter, period_filter, module_filter, flavor_filter, platform_filter, products_state], [catalog, product])
+        def select_all_filters(products):
+            values = select_all_filter_values(products)
+            return (
+                gr.update(value=values["plans"]),
+                gr.update(value=values["periodicidades"]),
+                gr.update(value=values["sabores"]),
+                gr.update(value=values["plataformas"]),
+            )
+
+        mark_all.click(select_all_filters, [products_state], [plan_filter, period_filter, flavor_filter, platform_filter])
+
         def choose_product(label, products):
             found = next((p for p in products if f"{p['descripcion']} [{p['codigo']}]" == label), None)
             return gr.update(choices=[x.strip() for x in found["planes"].split(",") if x.strip()] if found else []), gr.update(choices=[x.strip() for x in found["periodicidades"].split(",") if x.strip()] if found else [])
