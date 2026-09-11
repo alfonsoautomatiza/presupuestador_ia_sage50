@@ -6,6 +6,16 @@ El proyecto se publica para facilitar la transparencia y la colaboración en [al
 
 > **Independencia:** psage es un proyecto independiente de ALCA TIC S.L. No está afiliado, patrocinado ni respaldado oficialmente por Sage. “Sage 50” es una marca de Sage Group plc.
 
+## Autor y contacto
+
+**Alfonso Automatiza** — herramientas abiertas y automatización para la comunidad de partners de Sage.
+
+- 🌐 Colaboración y contacto: [alfonsoautomatiza.com/colaboramos](https://alfonsoautomatiza.com/colaboramos)
+- 🐙 GitHub: [github.com/alfonsoautomatiza](https://github.com/alfonsoautomatiza)
+- 💼 LinkedIn: <!-- TODO(linkedin): pegar la URL exacta del perfil -->
+
+¿Trabajás con Sage 50 y querés preparar presupuestos en minutos? Escribime: dudas, sugerencias y colaboraciones son bienvenidas.
+
 ## Norma de datos
 
 Este repositorio contiene **solo código fuente, tests y documentación**.
@@ -34,7 +44,7 @@ El usuario es responsable de:
 ## Qué hace
 
 - Lee una tarifa Excel local (`.xlsx`, `.xlsm` o `.xls`).
-- Filtra por módulo, sabor, plataforma, plan, periodicidad y texto.
+- Filtra por módulo, sabor, plataforma, plan, periodicidad y texto, con botón «📌 Todo» para marcar todos los valores de una vez.
 - Calcula precios y descuentos en cascada.
 - Añade productos y combinaciones de plan/periodicidad al presupuesto.
 - Guarda y recupera plantillas de líneas y observaciones.
@@ -50,9 +60,35 @@ El usuario es responsable de:
 - No envía datos a servicios de IA.
 - No sustituye la revisión comercial, fiscal o contractual.
 
-## Instalación con pipx
+## Instalación
 
-La instalación pública está pensada para usuarios con Python y `pipx`:
+### Opción 1 · Desde cero (sin herramientas previas)
+
+No hace falta saber programar: solo Python y un comando.
+
+1. **Instalá Python 3.11 o superior**
+   - Windows: descargalo de [python.org/downloads](https://www.python.org/downloads/). En el instalador, marcá **"Add python.exe to PATH"** antes de pulsar *Install Now*.
+   - macOS: descargalo de [python.org/downloads](https://www.python.org/downloads/) e instalá el paquete.
+   - Linux: normalmente ya está incluido; si falta, `sudo apt install python3-pip` (Debian/Ubuntu).
+   - Comprobalo en una terminal nueva: `python --version` (en Windows también vale `py --version`).
+2. **Descargá el proyecto**: en GitHub, botón verde **Code → Download ZIP**, y descomprimilo.
+3. **Instalá la aplicación**: abrí una terminal dentro de la carpeta descomprimida y ejecutá:
+
+   ```bash
+   python -m pip install .
+   ```
+
+   En Windows también vale `py -m pip install .`.
+
+4. **Arrancá**:
+
+   ```bash
+   psage
+   ```
+
+   Si el comando no se reconoce, abrí una terminal nueva y probá de nuevo.
+
+### Opción 2 · Con pipx (entorno aislado, si ya usás Python)
 
 ```bash
 cd /ruta/al/repositorio/pytarifas_sage50
@@ -60,7 +96,14 @@ pipx install --force .
 psage
 ```
 
-Opciones:
+### Opción 3 · Desarrollo con uv
+
+```bash
+uv sync
+uv run psage
+```
+
+Opciones de arranque:
 
 ```bash
 psage                  # abre Gradio en el navegador
@@ -75,18 +118,11 @@ La aplicación queda disponible normalmente en:
 http://localhost:8599
 ```
 
-Para una instalación de desarrollo con `uv`:
-
-```bash
-uv sync
-uv run psage
-```
-
 ## Flujo de uso
 
 1. En **📂 Tarifa y cliente**, cargá el Excel oficial autorizado y seleccioná la hoja.
 2. Completá los datos del cliente y el IVA.
-3. En **🔍 Catálogo**, aplicá los filtros disponibles.
+3. En **🔍 Catálogo**, aplicá los filtros (o pulsá **📌 Todo** para marcar todos los valores).
 4. En **📝 Presupuesto**, elegí producto, plan, periodicidad y cantidad.
 5. También podés añadir todas las líneas resultantes de los filtros del catálogo.
 6. Revisá líneas, papelera, agrupación, subtotal, IVA y total.
