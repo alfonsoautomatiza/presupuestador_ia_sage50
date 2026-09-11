@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>psage — Presupuestador Sage 50 · Certificado de instrumento libre</title>
+<meta name="description" content="psage convierte la tarifa oficial de Sage 50 en presupuestos profesionales, 100% en local. Código fuente público, licencia MIT con atribución.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Fragment+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --papel: #F8F6EE;
+    --papel-hondo: #F1EDE0;
+    --tinta: #0F4C3A;
+    --tinta-suave: #2A5C4B;
+    --oro: #B08C3D;
+    --oro-linea: #C4A45C;
+    --grafito: #22211E;
+    --grafito-suave: #55534C;
+    --keyline: rgba(15, 76, 58, .28);
+    --keyline-suave: rgba(15, 76, 58, .16);
+    --sombra-folio: 0 2px 6px rgba(34, 33, 30, .10), 0 18px 44px rgba(34, 33, 30, .14);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--papel-hondo);
+    color: var(--grafito);
+    font-family: "Inter", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--oro); color: #fff; }
+  :focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; border-radius: 2px; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--papel-hondo); }
+  ::-webkit-scrollbar-thumb { background: var(--tinta); border-radius: 5px; border: 2px solid var(--papel-hondo); }
+
+  .folio {
+    max-width: 1120px;
+    margin: clamp(16px, 4vw, 48px) auto;
+    background: var(--papel);
+    border: 1px solid var(--keyline);
+    box-shadow: var(--sombra-folio);
+    position: relative;
+  }
+  .folio::before, .folio::after {
+    content: ""; position: absolute; left: 10px; right: 10px; height: 1px;
+    background: var(--keyline-suave);
+  }
+  .folio::before { top: 10px; } .folio::after { bottom: 10px; }
+
+  .guilloche { display: block; width: 100%; height: 34px; color: var(--tinta); }
+
+  .cuerpo { padding: clamp(28px, 5vw, 72px) clamp(20px, 6vw, 88px); }
+
+  .titulo-obra {
+    font-family: "Archivo", "Inter", sans-serif;
+    font-stretch: 118%;
+    font-weight: 900;
+    font-size: clamp(3rem, 9vw, 6rem);
+    line-height: .96;
+    letter-spacing: -0.028em;
+    color: var(--grafito);
+  }
+  .titulo-obra span { color: var(--tinta); }
+  .bajo-titulo {
+    margin-top: 18px;
+    font-family: "Archivo", sans-serif;
+    font-weight: 600;
+    font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+    color: var(--tinta);
+    max-width: 34ch;
+    line-height: 1.3;
+  }
+  .mecanismo {
+    margin-top: 22px;
+    max-width: 62ch;
+    color: var(--grafito-suave);
+    font-size: 1.02rem;
+  }
+  .mecanismo strong { color: var(--grafito); font-weight: 600; }
+
+  .serie {
+    margin-top: 30px;
+    font-family: "Fragment Mono", monospace;
+    font-size: .78rem;
+    letter-spacing: .14em;
+    color: var(--tinta-suave);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 26px;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: clamp(24px, 4vw, 56px);
+    align-items: start;
+  }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+
+  .sellos { display: flex; gap: 18px; align-items: center; }
+  @media (max-width: 860px) { .sellos { order: -1; } }
+  .sello { width: clamp(120px, 16vw, 168px); height: auto; display: block; }
+  .sello.pendiente-estampar {
+    opacity: 0; transform: scale(1.55) rotate(-7deg); filter: blur(5px);
+  }
+  .sello.estampado {
+    opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0);
+    transition: opacity .45s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1), filter .45s ease-out;
+  }
+  .sello.estampado + .sello.pendiente-estampar { transition-delay: .28s; }
+  @media (prefers-reduced-motion: reduce) {
+    .sello { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
+
+  .cta-fila { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .btn-sello {
+    display: inline-block;
+    background: var(--tinta);
+    color: var(--papel);
+    font-family: "Archivo", sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .04em;
+    text-decoration: none;
+    padding: 16px 34px;
+    border: 1px solid var(--tinta);
+    border-radius: 3px;
+    box-shadow: 0 2px 6px rgba(34,33,30,.16);
+    transition: transform .18s ease-out, box-shadow .18s ease-out, background .18s ease-out;
+  }
+  .btn-sello:hover { background: #0C3E2F; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,76,58,.30); }
+  .btn-sello:active { transform: translateY(0); box-shadow: 0 1px 3px rgba(34,33,30,.18); }
+  .cta-nota { font-size: .88rem; color: var(--grafito-suave); max-width: 30ch; }
+
+  .division { border: 0; border-top: 1px solid var(--keyline); margin: clamp(36px, 6vw, 64px) 0; position: relative; }
+  .division::after {
+    content: ""; position: absolute; left: 50%; top: -4px; width: 7px; height: 7px;
+    transform: translateX(-50%) rotate(45deg);
+    background: var(--oro);
+  }
+
+  h2 {
+    font-family: "Archivo", sans-serif;
+    font-stretch: 112%;
+    font-weight: 800;
+    font-size: clamp(1.5rem, 3.4vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--grafito);
+    margin-bottom: 8px;
+  }
+  .seccion > p.lead { color: var(--grafito-suave); max-width: 66ch; margin-bottom: 22px; }
+
+  /* Etapas I–IV */
+  .etapas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; list-style: none; border: 1px solid var(--keyline); }
+  .etapas li { padding: 20px 22px 22px; border-left: 1px solid var(--keyline); position: relative; }
+  .etapas li:first-child { border-left: 0; }
+  @media (max-width: 860px) { .etapas { grid-template-columns: 1fr 1fr; } .etapas li { border-top: 1px solid var(--keyline); } .etapas li:nth-child(-n+2) { border-top: 0; } .etapas li:nth-child(odd) { border-left: 0; } }
+  @media (max-width: 540px) { .etapas { grid-template-columns: 1fr; } .etapas li { border-left: 0 !important; border-top: 1px solid var(--keyline); } .etapas li:first-child { border-top: 0; } }
+  .etapas .numeral {
+    font-family: "Archivo", sans-serif;
+    font-weight: 800;
+    font-size: 1.9rem;
+    color: var(--oro);
+    line-height: 1;
+    display: block;
+  }
+  .etapas .nombre {
+    font-family: "Archivo", sans-serif;
+    font-weight: 700;
+    font-size: .98rem;
+    letter-spacing: .06em;
+    color: var(--tinta);
+    display: block;
+    margin-top: 8px;
+  }
+  .etapas .detalle { font-size: .9rem; color: var(--grafito-suave); margin-top: 6px; display: block; }
+
+  /* Tiras de verificación */
+  .tiras { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 26px; }
+  .tira {
+    font-family: "Fragment Mono", monospace;
+    font-size: .8rem;
+    letter-spacing: .03em;
+    color: var(--tinta);
+    border: 1px solid var(--keyline);
+    background: var(--papel);
+    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tira svg { flex: none; }
+  .tira .ok { color: var(--tinta); }
+
+  /* Unidades de ornamento rotuladas */
+  .unidades { display: grid; grid-template-columns: repeat(6, 1fr); margin-top: 26px; border: 1px solid var(--keyline); }
+  .unidad { padding: 18px 12px 14px; text-align: center; border-left: 1px solid var(--keyline-suave); }
+  .unidad:first-child { border-left: 0; }
+  @media (max-width: 860px) { .unidades { grid-template-columns: repeat(3, 1fr); } .unidad:nth-child(n+4) { border-top: 1px solid var(--keyline-suave); } .unidad:nth-child(4) { border-left: 0; } }
+  @media (max-width: 540px) { .unidades { grid-template-columns: repeat(2, 1fr); } .unidad:nth-child(n+3) { border-top: 1px solid var(--keyline-suave); } .unidad:nth-child(2n+1) { border-left: 0; } .unidad:nth-child(2) { border-left: 1px solid var(--keyline-suave); } }
+  .unidad svg { display: block; margin: 0 auto 10px; color: var(--tinta); }
+  .unidad .rotulo {
+    font-family: "Fragment Mono", monospace;
+    font-size: .68rem;
+    letter-spacing: .12em;
+    color: var(--tinta-suave);
+    text-transform: uppercase;
+  }
+
+  /* Anexos */
+  .anexo { margin-top: 34px; }
+  .anexo-marco {
+    border: 1px solid var(--keyline);
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(34,33,30,.08), 0 10px 26px rgba(34,33,30,.10);
+  }
+  .anexo-marco img { display: block; width: 100%; height: auto; }
+  .anexo-marco.con-visor { position: relative; }
+  .anexo-marco.con-visor .ventana { max-height: 560px; overflow: auto; border: 1px solid var(--keyline-suave); }
+  .anexo-marco.con-visor .ventana img { margin-bottom: 0; }
+  .anexo-pie {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    font-family: "Fragment Mono", monospace;
+    font-size: .72rem;
+    letter-spacing: .1em;
+    color: var(--grafito-suave);
+  }
+  .anexo-pie .rotulo-anexo { color: var(--tinta); font-weight: 700; }
+
+  /* Licencia */
+  .licencia-caja { border: 1px solid var(--oro-linea); background: var(--papel); padding: clamp(24px, 4vw, 44px); position: relative; }
+  .licencia-caja::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--keyline-suave); pointer-events: none; }
+  .licencia-caja h3 {
+    font-family: "Archivo", sans-serif;
+    font-stretch: 110%;
+    font-weight: 800;
+    font-size: clamp(1.3rem, 2.6vw, 1.8rem);
+    color: var(--tinta);
+    margin-bottom: 12px;
+  }
+  .licencia-caja p { max-width: 70ch; color: var(--grafito); }
+  .licencia-caja p + p { margin-top: 10px; }
+  .licencia-caja code {
+    font-family: "Fragment Mono", monospace;
+    font-size: .82em;
+    background: var(--papel-hondo);
+    border: 1px solid var(--keyline-suave);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  .licencia-caja .enlaces { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .licencia-caja .enlaces a { color: var(--tinta); font-weight: 600; text-underline-offset: 3px; }
+  .licencia-caja .enlaces a:hover { color: var(--grafito); }
+
+  /* Firma / contacto */
+  .firma {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: clamp(20px, 4vw, 48px);
+    align-items: center;
+    background: var(--papel-hondo);
+    border: 1px solid var(--keyline);
+    padding: clamp(24px, 4vw, 44px);
+  }
+  @media (max-width: 700px) { .firma { grid-template-columns: 1fr; } }
+  .firma .monograma {
+    width: 92px; height: 92px; border-radius: 50%;
+    border: 2px solid var(--oro);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Archivo", sans-serif; font-weight: 900; font-size: 2rem;
+    color: var(--tinta); background: var(--papel);
+    box-shadow: 0 2px 6px rgba(34,33,30,.12);
+  }
+  .firma .quien { font-family: "Archivo", sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--grafito); }
+  .firma .que { color: var(--grafito-suave); margin-top: 4px; max-width: 56ch; }
+  .firma .enlaces { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 22px; }
+  .firma .enlaces a { color: var(--tinta); font-weight: 600; font-size: .95rem; text-underline-offset: 3px; }
+  .firma .enlaces a:hover { color: var(--grafito); }
+
+  footer.pie {
+    margin-top: clamp(40px, 7vw, 72px);
+    padding-top: 22px;
+    border-top: 1px solid var(--keyline);
+    font-size: .8rem;
+    color: var(--grafito-suave);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px 28px;
+    flex-wrap: wrap;
+  }
+  footer.pie .marca { font-family: "Fragment Mono", monospace; letter-spacing: .08em; font-size: .72rem; }
+</style>
+</head>
+<body>
+<!--
+  DIRECTION CONTRACT — seed key 529f2a06 · Certificado de Instrumento Libre
+  THESIS: la página entera es un folio certificado que acredita a psage como
+  instrumento libre, local y auditable; la licencia MIT es protagonista, no
+  letra chica — se rechaza el hero-genérico de SaaS y la licencia como pie.
+  OWN-WORLD: papel #F8F6EE, una sola tinta de grabado verde #0F4C3A, oro de
+ FoI foil #B08C3D, grafito #22211E; guilloches SVG, sellos estampados,
+  numeración seriada en Fragment Mono, Archivo (fundición española) para
+  display e Inter para cuerpo.
+  STORY: el socio entiende qué hace psage, comprueba que es local y auditable
+  (tiras de verificación, anexos con datos ficticios), y adopta el código
+  sabiendo que su única obligación es mantener el aviso MIT.
+  FIRST VIEWPORT: folio completo con borde de guilloche; PSAGE en Archivo
+  expandida a 6rem; línea de mecanismo; dos sellos (MIT · 100% LOCAL) que se
+  estampan al entrar en vista; serie + revisión fechada; CTA «Obtener el
+  código» como estampado oficial, arriba a la derecha del pliegue.
+  FORM: dirección asignada por el rol (candidato 7 de la lista fundamentada),
+  seed 529f2a06; construcción code-led sin comp.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
+-->
+<main class="folio">
+  <svg class="guilloche" viewBox="0 0 1200 34" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <pattern id="guillocheTop" width="60" height="34" patternUnits="userSpaceOnUse">
+        <path d="M0,17 C10,2 20,2 30,17 S50,32 60,17 M0,17 C10,32 20,32 30,17 S50,2 60,17" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.55"/>
+        <path d="M0,17 C15,4 25,30 45,10 S60,17 60,17" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.35"/>
+      </pattern>
+    </defs>
+    <rect width="1200" height="34" fill="url(#guillocheTop)"/>
+  </svg>
+
+  <div class="cuerpo">
+    <header class="hero-grid">
+      <div>
+        <h1 class="titulo-obra">PSAGE<span>.</span></h1>
+        <p class="bajo-titulo">Presupuestador Sage 50: tu tarifa oficial, convertida en presupuestos. Sin que nada salga de tu ordenador.</p>
+        <p class="mecanismo">psage es <strong>código fuente público</strong>: lee la tarifa Excel de Sage 50 que tú ya tienes, arma el catálogo con filtros, calcula precios y descuentos en cascada y exporta el presupuesto en <strong>PDF, Excel o JSON</strong>. Todo el cálculo ocurre <strong>en tu máquina</strong>: ni tarifas ni presupuestos tocan un servidor.</p>
+        <p class="serie">
+          <span>SERIE PS-2026-0001</span>
+          <span>REVISIÓN v0.3.0</span>
+          <span>EXPEDICIÓN: SEPTIEMBRE DE 2026</span>
+        </p>
+        <div class="cta-fila">
+          <a class="btn-sello" href="https://github.com/alfonsoautomatiza/pytarifas_sage50" rel="noopener">Obtener el código</a>
+          <p class="cta-nota">Gratis, auditable y libre. La única condición cabe en una línea.</p>
+        </div>
+      </div>
+      <div class="sellos" role="img" aria-label="Sellos: licencia MIT y procesamiento 100% local">
+        <svg class="sello pendiente-estampar" viewBox="0 0 170 170" aria-hidden="true">
+          <defs><path id="arcoMit" d="M85,85 m-62,0 a62,62 0 1,1 124,0 a62,62 0 1,1 -124,0"/></defs>
+          <circle cx="85" cy="85" r="80" fill="none" stroke="#B08C3D" stroke-width="2.5"/>
+          <circle cx="85" cy="85" r="73" fill="none" stroke="#0F4C3A" stroke-width="1"/>
+          <circle cx="85" cy="85" r="48" fill="none" stroke="#0F4C3A" stroke-width="1.2"/>
+          <text font-family="Archivo, sans-serif" font-size="12.5" font-weight="700" letter-spacing="3.5" fill="#0F4C3A">
+            <textPath href="#arcoMit" startOffset="2%">LICENCIA MIT · CÓDIGO LIBRE ·</textPath>
+          </text>
+          <text x="85" y="82" text-anchor="middle" font-family="Archivo, sans-serif" font-size="30" font-weight="900" fill="#0F4C3A">MIT</text>
+          <text x="85" y="100" text-anchor="middle" font-family="Fragment Mono, monospace" font-size="8.5" letter-spacing="2" fill="#55534C">USO LIBRE</text>
+        </svg>
+        <svg class="sello pendiente-estampar" viewBox="0 0 170 170" aria-hidden="true">
+          <defs><path id="arcoLocal" d="M85,85 m-62,0 a62,62 0 1,1 124,0 a62,62 0 1,1 -124,0"/></defs>
+          <circle cx="85" cy="85" r="80" fill="none" stroke="#B08C3D" stroke-width="2.5"/>
+          <circle cx="85" cy="85" r="73" fill="none" stroke="#0F4C3A" stroke-width="1"/>
+          <circle cx="85" cy="85" r="48" fill="none" stroke="#0F4C3A" stroke-width="1.2"/>
+          <text font-family="Archivo, sans-serif" font-size="12.5" font-weight="700" letter-spacing="3.5" fill="#0F4C3A">
+            <textPath href="#arcoLocal" startOffset="2%">100% EN LOCAL · SIN SERVIDORES ·</textPath>
+          </text>
+          <path d="M85,60 l18,8 v14 c0,12 -8,20 -18,26 c-10,-6 -18,-14 -18,-26 v-14 z" fill="none" stroke="#0F4C3A" stroke-width="2.2"/>
+          <path d="M77,87 l6,6 l11,-13" fill="none" stroke="#B08C3D" stroke-width="2.4"/>
+        </svg>
+      </div>
+    </header>
+
+    <hr class="division">
+
+    <section class="seccion" aria-labelledby="proceso">
+      <h2 id="proceso">Un proceso certificado, de la tarifa al presupuesto</h2>
+      <p class="lead">Cada expediente de psage sigue cuatro etapas visibles. Nada sale de tu equipo en ningún momento del trayecto.</p>
+      <ol class="etapas">
+        <li><span class="numeral" aria-hidden="true">I</span><span class="nombre">CARGA</span><span class="detalle">Abres tu tarifa Excel oficial de Sage 50 y eliges la hoja.</span></li>
+        <li><span class="numeral" aria-hidden="true">II</span><span class="nombre">TRANSFORMA</span><span class="detalle">El catálogo queda filtrable por plan, periodicidad, módulo, sabor y plataforma.</span></li>
+        <li><span class="numeral" aria-hidden="true">III</span><span class="nombre">PRESUPUESTA</span><span class="detalle">Líneas con descuentos en cascada, agrupación, plantillas y totales con IVA.</span></li>
+        <li><span class="numeral" aria-hidden="true">IV</span><span class="nombre">EXPORTA</span><span class="detalle">PDF, Excel y JSON versionado, guardados en tu equipo.</span></li>
+      </ol>
+
+      <div class="tiras" aria-label="Tiras de verificación">
+        <span class="tira"><svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"><path d="M2 8 l4 4 L13 3" fill="none" stroke="currentColor" stroke-width="2"/></svg> 60/60 TESTS EN VERDE</span>
+        <span class="tira"><svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"><path d="M2 8 l4 4 L13 3" fill="none" stroke="currentColor" stroke-width="2"/></svg> FLUJO COMPLETO VERIFICADO EN CHROME</span>
+        <span class="tira"><svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"><path d="M2 8 l4 4 L13 3" fill="none" stroke="currentColor" stroke-width="2"/></svg> REVISIÓN DE 4 LENTES APROBADA</span>
+      </div>
+
+      <div class="unidades" aria-label="Funciones del instrumento">
+        <div class="unidad"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 4 h16 l-6 7 v6 l-4 2 v-8 z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="rotulo">Filtros</span></div>
+        <div class="unidad"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 6 h12 M8 6 V4 h6 v2 M6.5 6 l1 12 h7 l1-12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="rotulo">Papelera</span></div>
+        <div class="unidad"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M4 5 h6 v6 H4 z M12 5 h6 v6 h-6 z M4 13 h6 v6 H4 z M12 13 h6 v6 h-6 z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="rotulo">Agrupación</span></div>
+        <div class="unidad"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 3 v10 M7 9 l4 4 4-4 M4 17 h14" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="rotulo">Exporta</span></div>
+        <div class="unidad"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 3 h9 l3 3 v13 H5 z M14 3 v4 h4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="rotulo">Plantillas</span></div>
+        <div class="unidad"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 4 a7 7 0 1 0 7 7 M11 4 v7 h7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="rotulo">IVA y totales</span></div>
+      </div>
+    </section>
+
+    <hr class="division">
+
+    <section class="seccion" aria-labelledby="anexos">
+      <h2 id="anexos">Anexos: el instrumento en funcionamiento</h2>
+      <p class="lead">Capturas reales de la aplicación ejecutada con una tarifa <strong>completamente ficticia</strong> (series DEMO). Nada de datos comerciales, ni nuestros ni de nadie.</p>
+
+      <figure class="anexo">
+        <div class="anexo-marco"><img src="img/anexo-catalogo.png" alt="Pestaña Catálogo de psage: buscador con el texto Demo, botón Todo, filtros de plan y periodicidad, y la tabla con seis productos ficticios DEMO." loading="lazy"></div>
+        <figcaption class="anexo-pie"><span class="rotulo-anexo">ANEXO A — CATÁLOGO FILTRABLE</span><span>tarifa ficticia · 6 artículos</span></figcaption>
+      </figure>
+
+      <figure class="anexo">
+        <div class="anexo-marco con-visor"><div class="ventana"><img src="img/anexo-presupuesto.png" alt="Pestaña Presupuesto de psage: tabla de líneas con botón Eliminar por fila, plan, periodicidad, cantidades, descuentos aplicados y totales con IVA." loading="lazy"></div></div>
+        <figcaption class="anexo-pie"><span class="rotulo-anexo">ANEXO B — PRESUPUESTO CON PAPELERA</span><span>44 líneas demo · desplazá dentro del marco</span></figcaption>
+      </figure>
+
+      <figure class="anexo">
+        <div class="anexo-marco"><img src="img/anexo-exporta.png" alt="Pestaña Exportar de psage con los botones para generar PDF, Excel y JSON, y la opción de limpiar el presupuesto." loading="lazy"></div>
+        <figcaption class="anexo-pie"><span class="rotulo-anexo">ANEXO C — EXPORTA</span><span>PDF · Excel · JSON v1</span></figcaption>
+      </figure>
+    </section>
+
+    <hr class="division">
+
+    <section class="seccion" aria-labelledby="licencia">
+      <h2 id="licencia">Libre con una sola condición</h2>
+      <p class="lead">Esto no es una prueba gratuita ni una versión limitada. Es la licencia real que acompaña al código.</p>
+      <div class="licencia-caja">
+        <h3>Licencia MIT</h3>
+        <p><strong>Usalo, modificalo, redistribuyelo e incluyelo en tu negocio.</strong> Para uso personal o comercial, sin coste y sin permisos que pedir.</p>
+        <p>La única condición: al redistribuir el código, tal cual o modificado, <strong>debés mantener el aviso de copyright y esta licencia</strong>. Es la forma en que el trabajo sigue siendo libre para el siguiente.</p>
+        <p style="margin-top:14px">El aviso completo vive en el archivo <code>LICENSE</code> del repositorio: © 2026 AlfonsoAutomatiza.com</p>
+        <div class="enlaces">
+          <a href="https://github.com/alfonsoautomatiza/pytarifas_sage50/blob/master/LICENSE" rel="noopener">Leer la licencia completa</a>
+          <a href="https://github.com/alfonsoautomatiza/pytarifas_sage50" rel="noopener">Ver el código fuente</a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="division">
+
+    <section class="seccion" aria-labelledby="contacto">
+      <h2 id="contacto">El folio lo firma una persona</h2>
+      <div class="firma">
+        <div class="monograma" aria-hidden="true">AA</div>
+        <div>
+          <p class="quien">Alfonso Automatiza</p>
+          <p class="que">Construyo herramientas abiertas para la comunidad de partners de Sage. Si usás Sage 50 y querés preparar presupuestos en minutos, o querés contribuir, escribinos: dudas, sugerencias y colaboraciones son bienvenidas.</p>
+          <div class="enlaces">
+            <a href="https://alfonsoautomatiza.com/colaboramos" rel="noopener">alfonsoautomatiza.com/colaboramos</a>
+            <a href="https://github.com/alfonsoautomatiza" rel="noopener">github.com/alfonsoautomatiza</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="pie">
+      <span>© 2026 AlfonsoAutomatiza.com · psage se distribuye bajo licencia MIT.</span>
+      <span class="marca">INDEPENDIENTE DE SAGE — “SAGE 50” ES MARCA DE SAGE GROUP PLC</span>
+    </footer>
+  </div>
+
+  <svg class="guilloche" viewBox="0 0 1200 34" preserveAspectRatio="none" aria-hidden="true">
+    <rect width="1200" height="34" fill="url(#guillocheTop)"/>
+  </svg>
+</main>
+
+<script>
+  (function () {
+    var sellos = document.querySelectorAll(".sello");
+    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      sellos.forEach(function (s) { s.classList.add("estampado"); s.classList.remove("pendiente-estampar"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("estampado");
+          e.target.classList.remove("pendiente-estampar");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    sellos.forEach(function (s) { io.observe(s); });
+  })();
+</script>
+</body>
+</html>
