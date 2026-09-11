@@ -30,6 +30,8 @@ No se publica ni se debe commitear nunca:
 
 Esta regla es obligatoria para cualquier contribución. Los tests deben usar datos en memoria o ficheros temporales fuera de las rutas versionadas.
 
+Las tarifas originales, la tarifa simplificada, plantillas, backups y presupuestos viven en carpetas locales ignoradas por Git. La ubicación se puede configurar con la variable de entorno `TARIFAS_DATA_DIR`.
+
 ## Requisito indispensable: acceso legítimo a la tarifa
 
 psage **no incluye ni distribuye una lista de precios de Sage**. Para usarlo, cada usuario o socio debe tener acceso legítimo a su propia tarifa oficial y cargarla localmente.
@@ -91,7 +93,7 @@ No hace falta saber programar: solo Python y un comando.
 ### Opción 2 · Con pipx (entorno aislado, si ya usás Python)
 
 ```bash
-cd /ruta/al/repositorio/pytarifas_sage50
+cd /ruta/al/repositorio/presupuestador_ia_sage50
 pipx install --force .
 psage
 ```
@@ -130,6 +132,14 @@ http://localhost:8599
 
 Los archivos generados se guardan localmente en la carpeta de datos del usuario. Revisá siempre el contenido antes de compartirlo: puede contener CIF, emails, precios y otra información sensible.
 
+## Lógica de precios
+
+La resolución busca primero la combinación exacta de plan y periodicidad, después los fallbacks definidos por el modelo y finalmente las tarifas de servicios puntuales. Los descuentos se aplican en cascada:
+
+```text
+Neto = Precio × (1 - dto_partner) × (1 - dto_tech_bp) × (1 - dto_pam)
+```
+
 ## Desarrollo y tests
 
 ```bash
@@ -154,9 +164,7 @@ psage/
 ├── json_generator.py        # Exportación JSON versionada
 ├── templates.py             # Plantillas locales
 ├── tests/                   # Tests sin datos comerciales
-├── INSTRUCCIONES.md         # Detalles técnicos
-├── PRD.md                   # Requisitos y norma de publicación
-└── LICENSE                 # Licencia MIT
+└── LICENSE                  # Licencia MIT
 ```
 
 ## Transparencia y colaboración
