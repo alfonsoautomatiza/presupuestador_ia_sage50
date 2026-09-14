@@ -48,6 +48,14 @@ def _wait_for_port(puerto, timeout_s=20.0):
 
 def _serve_gradio(puerto, inbrowser=False, prevent_thread_lock=False):
     from importlib import import_module
+    # En hilo secundario (modo ventana del exe) no hay event loop: Gradio crea
+    # los locks de su cola como None (safe_get_lock) y la app revienta al
+    # entrar en la cola. Aseguramos loop antes de construir Blocks.
+    import asyncio
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
     build_app = import_module("gradio_app").build_app
     return build_app().launch(server_name="127.0.0.1", server_port=puerto, inbrowser=inbrowser, prevent_thread_lock=prevent_thread_lock)
 
