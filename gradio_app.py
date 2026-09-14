@@ -340,15 +340,50 @@ def build_app():
                         clear = gr.Button("🧹 Limpiar presupuesto")
                         export_status = gr.Markdown()
 
+                def save_template_handler(name, lines, note):
+            """Save template with error handling and user feedback."""
+            if not name or not name.strip():
+                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "❌ El nombre de la plantilla no puede estar vacío."
+            try:
+                guardar_plantilla(TEMPLATE_PATH, name.strip(), lines, note)
+                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"✅ Plantilla '{name.strip()}' guardada correctamente en {TEMPLATE_PATH}."
+            except OSError as e:
+                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error al guardar plantilla: {str(e)}"
+            except Exception as e:
+                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error inesperado: {str(e)}"
+
+        def load_template_handler(name):
+            """Load template with error handling."""
+            try:
+                data = cargar_plantilla(TEMPLATE_PATH, name)
+                if data is None:
+                    return [], "", f"❌ Plantilla '{name}' no encontrada."
+                return data.get("lineas", []), data.get("notas", ""), f"✅ Plantilla '{name}' cargada."
+            except Exception as e:
+                return [], "", f"❌ Error al cargar plantilla: {str(e)}"
+
+        def delete_template_handler(name):
+            """Delete template with error handling."""
+            if not name:
+                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "❌ Selecciona una plantilla para eliminar."
+            try:
+                deleted = borrar_plantilla(TEMPLATE_PATH, name)
+                if deleted:
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"✅ Plantilla '{name}' eliminada."
+                else:
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Plantilla '{name}' no encontrada."
+            except Exception as e:
+                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error al eliminar plantilla: {str(e)}"
+
         client_inputs = [company, cif, contact, email, validity, conditions]
         process.click(process_tariff, [tariff_file, sheet], [tariff_status, products_state, tariff_state])
         for field in client_inputs:
             field.change(lambda *values: dict(zip(["empresa", "cif", "contacto", "email", "validez", "condiciones"], values)), client_inputs, client_state)
         notes.change(lambda value: value, notes, notes_state)
         grouping.change(lambda value: value, grouping, grouping_state)
-        save_template.click(lambda name, lines, note: (guardar_plantilla(TEMPLATE_PATH, name.strip(), lines, note) if name and name.strip() else None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "Plantilla guardada."), [template_name, lines_state, notes], [template_status, template_select, template_status])
-        load_template.click(lambda name: ((cargar_plantilla(TEMPLATE_PATH, name) or {}).get("lineas", []), (cargar_plantilla(TEMPLATE_PATH, name) or {}).get("notas", ""), "Plantilla cargada."), template_select, [lines_state, notes, template_status]).then(refresh_budget, [lines_state, grouping, iva, client_state, notes_state], [budget, totals, gr.State([]), gr.State({})])
-        delete_template.click(lambda name: (borrar_plantilla(TEMPLATE_PATH, name) if name else False, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "Plantilla eliminada."), template_select, [template_status, template_select, template_status])
+        save_template.click(save_template_handler, [template_name, lines_state, notes], [template_status, template_select, template_status])
+        load_template.click(load_template_handler, template_select, [lines_state, notes, template_status]).then(refresh_budget, [lines_state, grouping, iva, client_state, notes_state], [budget, totals, gr.State([]), gr.State({})])
+        delete_template.click(delete_template_handler, template_select, [template_status, template_select, template_status])
         def update_catalog(text, plans, periods, modules, flavors, platforms, products):
             filtered = filtrar_productos(products, plans, periods, modules, flavors, platforms, text)
             labels = [f"{p['descripcion']} [{p['codigo']}]" for p in filtered]
@@ -369,7 +404,9 @@ def build_app():
 
         def choose_product(label, products):
             found = next((p for p in products if f"{p['descripcion']} [{p['codigo']}]" == label), None)
-            return gr.update(choices=[x.strip() for x in found["planes"].split(",") if x.strip()] if found else []), gr.update(choices=[x.strip() for x in found["periodicidades"].split(",") if x.strip()] if found else [])
+            plan_choices = [x.strip() for x in found["planes"].split(",") if x.strip()] if found else []
+            period_choices = [x.strip() for x in found["periodicidades"].split(",") if x.strip()] if found else []
+            return gr.update(choices=plan_choices, value=plan_choices[0] if plan_choices else None), gr.update(choices=period_choices, value=period_choices[0] if period_choices else None)
         product.change(choose_product, [product, products_state], [product_plan, product_period])
         def add_selected(label, pl, pe, q, current, products, current_grouping, current_iva):
             selected = next((p for p in products if f"{p['descripcion']} [{p['codigo']}]" == label), None)
