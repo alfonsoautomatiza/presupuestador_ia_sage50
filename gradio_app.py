@@ -342,42 +342,42 @@ def build_app():
                             gr.HTML('<a href="https://github.com/alfonsoautomatiza/presupuestador_ia_sage50/issues/new" target="_blank" style="display:inline-block;padding:7px 14px;background:#1f883d;color:white;border-radius:6px;text-decoration:none;font-weight:500;cursor:pointer;border:1px solid #238636;text-align:center;flex:1;min-height:40px;line-height:26px;">🐛 Reportar issue</a>')
                         export_status = gr.Markdown()
 
-                def save_template_handler(name, lines, note):
-            """Save template with error handling and user feedback."""
-            if not name or not name.strip():
-                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "❌ El nombre de la plantilla no puede estar vacío."
-            try:
-                guardar_plantilla(TEMPLATE_PATH, name.strip(), lines, note)
-                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"✅ Plantilla '{name.strip()}' guardada correctamente en {TEMPLATE_PATH}."
-            except OSError as e:
-                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error al guardar plantilla: {str(e)}"
-            except Exception as e:
-                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error inesperado: {str(e)}"
+            def save_template_handler(name, lines, note):
+                """Save template with error handling and user feedback."""
+                if not name or not name.strip():
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "❌ El nombre de la plantilla no puede estar vacío."
+                try:
+                    guardar_plantilla(TEMPLATE_PATH, name.strip(), lines, note)
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"✅ Plantilla '{name.strip()}' guardada correctamente en {TEMPLATE_PATH}."
+                except OSError as e:
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error al guardar plantilla: {str(e)}"
+                except Exception as e:
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error inesperado: {str(e)}"
 
-        def load_template_handler(name):
-            """Load template with error handling."""
-            try:
-                data = cargar_plantilla(TEMPLATE_PATH, name)
-                if data is None:
-                    return [], "", f"❌ Plantilla '{name}' no encontrada."
-                return data.get("lineas", []), data.get("notas", ""), f"✅ Plantilla '{name}' cargada."
-            except Exception as e:
-                return [], "", f"❌ Error al cargar plantilla: {str(e)}"
+            def load_template_handler(name):
+                """Load template with error handling."""
+                try:
+                    data = cargar_plantilla(TEMPLATE_PATH, name)
+                    if data is None:
+                        return [], "", f"❌ Plantilla '{name}' no encontrada."
+                    return data.get("lineas", []), data.get("notas", ""), f"✅ Plantilla '{name}' cargada."
+                except Exception as e:
+                    return [], "", f"❌ Error al cargar plantilla: {str(e)}"
 
-        def delete_template_handler(name):
-            """Delete template with error handling."""
-            if not name:
-                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "❌ Selecciona una plantilla para eliminar."
-            try:
-                deleted = borrar_plantilla(TEMPLATE_PATH, name)
-                if deleted:
-                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"✅ Plantilla '{name}' eliminada."
-                else:
-                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Plantilla '{name}' no encontrada."
-            except Exception as e:
-                return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error al eliminar plantilla: {str(e)}"
+            def delete_template_handler(name):
+                """Delete template with error handling."""
+                if not name:
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), "❌ Selecciona una plantilla para eliminar."
+                try:
+                    deleted = borrar_plantilla(TEMPLATE_PATH, name)
+                    if deleted:
+                        return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"✅ Plantilla '{name}' eliminada."
+                    else:
+                        return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Plantilla '{name}' no encontrada."
+                except Exception as e:
+                    return None, gr.update(choices=listar_plantillas(TEMPLATE_PATH)), f"❌ Error al eliminar plantilla: {str(e)}"
 
-        client_inputs = [company, cif, contact, email, validity, conditions]
+            client_inputs = [company, cif, contact, email, validity, conditions]
         process.click(process_tariff, [tariff_file, sheet], [tariff_status, products_state, tariff_state])
         for field in client_inputs:
             field.change(lambda *values: dict(zip(["empresa", "cif", "contacto", "email", "validez", "condiciones"], values)), client_inputs, client_state)

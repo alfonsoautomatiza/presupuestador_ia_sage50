@@ -7,6 +7,10 @@ import threading
 import time
 import webbrowser
 
+# Import for PyInstaller detection (frozen apps only)
+if getattr(sys, "frozen", False):
+    import gradio_app as _gradio_app_frozen
+
 DEFAULT_PORT = 8599
 
 
