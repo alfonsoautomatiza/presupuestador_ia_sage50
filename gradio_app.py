@@ -337,7 +337,9 @@ def build_app():
                             pdf = gr.DownloadButton("📄 Generar PDF")
                             excel = gr.DownloadButton("📊 Generar Excel")
                             json_export = gr.DownloadButton("🤖 Generar JSON")
-                        clear = gr.Button("🧹 Limpiar presupuesto")
+                        with gr.Row():
+                            clear = gr.Button("🧹 Limpiar presupuesto")
+                            gr.HTML('<a href="https://github.com/alfonsoautomatiza/presupuestador_ia_sage50/issues/new" target="_blank" style="display:inline-block;padding:7px 14px;background:#1f883d;color:white;border-radius:6px;text-decoration:none;font-weight:500;cursor:pointer;border:1px solid #238636;text-align:center;flex:1;min-height:40px;line-height:26px;">🐛 Reportar issue</a>')
                         export_status = gr.Markdown()
 
                 def save_template_handler(name, lines, note):
