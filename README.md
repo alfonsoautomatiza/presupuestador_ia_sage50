@@ -12,7 +12,6 @@ El proyecto se publica para facilitar la transparencia y la colaboración en [al
 
 - 🌐 Colaboración y contacto: [alfonsoautomatiza.com/colaboramos](https://alfonsoautomatiza.com/colaboramos)
 - 🐙 GitHub: [github.com/alfonsoautomatiza](https://github.com/alfonsoautomatiza)
-- 💼 LinkedIn: <!-- TODO(linkedin): pegar la URL exacta del perfil -->
 
 ¿Trabajás con Sage 50 y querés preparar presupuestos en minutos? Escribime: dudas, sugerencias y colaboraciones son bienvenidas.
 
