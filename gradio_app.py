@@ -339,8 +339,10 @@ def build_app():
                             json_export = gr.DownloadButton("🤖 Generar JSON")
                         with gr.Row():
                             clear = gr.Button("🧹 Limpiar presupuesto")
-                            gr.HTML('<a href="https://github.com/alfonsoautomatiza/presupuestador_ia_sage50/issues/new" target="_blank" style="display:inline-block;padding:7px 14px;background:#1f883d;color:white;border-radius:6px;text-decoration:none;font-weight:500;cursor:pointer;border:1px solid #238636;text-align:center;flex:1;min-height:40px;line-height:26px;">🐛 Reportar issue</a>')
                         export_status = gr.Markdown()
+                    with gr.Tab("Reportar Incidencia"):
+                        gr.Markdown("¿Has encontrado un problema con la aplicación? Pulsa el botón y cuéntanos qué ha pasado.")
+                        gr.HTML('<a href="https://github.com/alfonsoautomatiza/presupuestador_ia_sage50/issues/new" target="_blank" style="display:inline-block;padding:10px 22px;background:#1f883d;color:white;border-radius:6px;text-decoration:none;font-weight:500;cursor:pointer;border:1px solid #238636;text-align:center;min-height:40px;line-height:26px;">Reportar Incidencia</a>')
 
             def save_template_handler(name, lines, note):
                 """Save template with error handling and user feedback."""
